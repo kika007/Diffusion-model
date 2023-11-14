@@ -1,13 +1,14 @@
 import torch
 import torchaudio
 import matplotlib.pyplot as plt
-from function.plot_signal import plot_signal
 from function.play_signal import play_signal
 from function.get_noise import get_noise
+from dataset import AudioDataset
 import numpy as np
-from Model_demo import Denoiser
+from model_demo import Denoiser
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
 
 
 
@@ -17,14 +18,6 @@ file_path = "signal_examples/zvuk1.wav"
 signal, sample_rate = torchaudio.load(file_path)
 
 #-------------------------------------------------
-
-
-#PLOT SIGNAL
-
-#plot_signal(signal,sample_rate)
-
-#---------------------------------------------------
-
 
 #ADD NOISE
 
@@ -40,9 +33,7 @@ for i in range(1):
 
 #-------------------------------------------------------
 
-
 #DENOISER
-
 
 denoiser_model = Denoiser()
 
@@ -80,7 +71,7 @@ for epoch in range(num_epochs):
 
 
 
-# Predikcia denoised spektrogramu pomocou natrénovaného autoencodéra
+# Predikcia denoised spektrogramu pomocou natrénovaného denoisera
 with torch.no_grad():
     denoised_spectrogram = denoiser_model(noisy_spectrogram)
 
