@@ -22,7 +22,6 @@ signal, sample_rate = torchaudio.load(file_path)
 #ADD NOISE
 
 SNR = 50
-
 noise = get_noise(signal,SNR)
 
 for i in range(1):
@@ -37,23 +36,24 @@ for i in range(1):
 
 denoiser_model = Denoiser()
 
-spectrogram = torchaudio.transforms.Spectrogram()(signal)
+n_fft = 1024
+spectrogram_ = torch.stft(signal, n_fft, return_complex=True)
+noisy_spectrogram_ = torch.stft(signal_noise, n_fft, return_complex=True)
 
-noisy_spectrogram = torchaudio.transforms.Spectrogram()(signal_noise)
+#spectrogram = torch.view_as_real(spectrogram)
+#noisy_spectrogram = torch.view_as_real(noisy_spectrogram)
 
+spectrogram = torch.abs(spectrogram_)
+noisy_spectrogram = torch.abs(noisy_spectrogram_)
 
 # Trénovanie autoencodéra pre úpravu spektrogramov
 criterion = nn.MSELoss()
 optimizer = optim.Adam(denoiser_model.parameters(), lr=0.001)
 
-
-
 # Uchováva stratu počas trénovania
 losses = []
 
-
-
-num_epochs = 20
+num_epochs = 2
 
 for epoch in range(num_epochs):
     # Predikcia a výpočet chyby
@@ -103,6 +103,23 @@ plt.show()
 
 #------------------------------------------------------------------------
 
+#rekonštruovanie signálu - in progress problém že do modelu hádžem realne čísla a výstup su tiež realne čísla, takže to neviem transformovať späť
+
+""""
+reconstructed_signal = torch.istft(denoised_spectrogram,n_fft)
+
+signal = signal.numpy()
+plt.subplot(2,1,1)
+plt.plot(signal[0])
+plt.title('Original signal')
+
+reconstructed_signal =reconstructed_signal.numpy()
+plt.subplot(2,1,2)
+plt.plot(reconstructed_signal[0])
+plt.title('Reconstructed signal')
+
+plt.show()
+"""
 
 
 
