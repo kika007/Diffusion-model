@@ -2,7 +2,6 @@ import simpleaudio as sa
 import numpy as np
 
 
-
 def play_signal(signal,sample_rate):
 
     # Normalize the signal to the range from -1 to 1
