@@ -20,16 +20,8 @@ class AudioDataset(Dataset):
     def __getitem__(self, idx):
         file_path = self.wav_files[idx]
         waveform, sample_rate = torchaudio.load(file_path)
-        return waveform, sample_rate, idx
+        return waveform, sample_rate
     
-
-dataset_path = "examples/data_dir"
-dataset = AudioDataset(dataset_path)
-data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
-
-first_data = dataset[0]
-features, rate, labels = first_data
-print(features,rate,labels)
 
 
 
