@@ -36,15 +36,12 @@ for i in range(1):
 
 denoiser_model = Denoiser()
 
-n_fft = 1024
-spectrogram_ = torch.stft(signal, n_fft, return_complex=True)
-noisy_spectrogram_ = torch.stft(signal_noise, n_fft, return_complex=True)
+n_fft = 512
 
-#spectrogram = torch.view_as_real(spectrogram)
-#noisy_spectrogram = torch.view_as_real(noisy_spectrogram)
+spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal)
 
-spectrogram = torch.abs(spectrogram_)
-noisy_spectrogram = torch.abs(noisy_spectrogram_)
+noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal_noise)
+
 
 # Trénovanie autoencodéra pre úpravu spektrogramov
 criterion = nn.MSELoss()
@@ -53,7 +50,7 @@ optimizer = optim.Adam(denoiser_model.parameters(), lr=0.001)
 # Uchováva stratu počas trénovania
 losses = []
 
-num_epochs = 2
+num_epochs = 10
 
 for epoch in range(num_epochs):
     # Predikcia a výpočet chyby
@@ -93,14 +90,6 @@ plt.title('Denoised Spectrogram')
 
 plt.show()
 
-
-# Vykreslenie priebehu strát počas trénovania
-plt.plot(losses)
-plt.title('Training Loss Over Time')
-plt.xlabel('Epoch')
-plt.ylabel('MSE Loss')
-plt.show()
-
 #------------------------------------------------------------------------
 
 #rekonštruovanie signálu - in progress problém že do modelu hádžem realne čísla a výstup su tiež realne čísla, takže to neviem transformovať späť
@@ -120,6 +109,23 @@ plt.title('Reconstructed signal')
 
 plt.show()
 """
+
+
+#rekonštrukcia signálu s použitím funkcie torchaudio.transforms
+
+reconstructed_signal = torchaudio.transforms.GriffinLim(n_fft=n_fft)(denoised_spectrogram)
+signal_1 = signal.numpy()
+plt.subplot(2,1,1)
+plt.plot(signal_1[0])
+plt.title('Original signal')
+
+signal_new_1 = reconstructed_signal.numpy()
+plt.subplot(2,1,2)
+plt.plot(signal_new_1[0])
+plt.title('transformed signal')
+
+plt.show()
+
 
 
 

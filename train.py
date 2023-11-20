@@ -49,9 +49,9 @@ for epoch in range(num_epochs):
         signal_noise = signal_noise + noise
         #-------------------------------------------------------
         
-        spectrogram = torchaudio.transforms.Spectrogram()(waveform)
+        spectrogram = torchaudio.transforms.Spectrogram(n_fft=512)(waveform)
 
-        noisy_spectrogram = torchaudio.transforms.Spectrogram()(signal_noise)
+        noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=512)(signal_noise)
 
         # Predikcia a výpočet chyby
         output_spectrogram = denoiser_model(noisy_spectrogram)
