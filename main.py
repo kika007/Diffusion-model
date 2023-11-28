@@ -14,14 +14,14 @@ from torch.utils.data import Dataset, DataLoader
 
 #IMPORT SIGNAL
 
-file_path = "signal_examples/zvuk1.wav" 
+file_path = "examples\data_dir\MIDI-Unprocessed_01_R1_2006_01-09_ORIG_MID--AUDIO_01_R1_2006_02_Track02_wav.wav" 
 signal, sample_rate = torchaudio.load(file_path)
 
 #-------------------------------------------------
 
 #ADD NOISE
 
-SNR = 50
+SNR = 20
 noise = get_noise(signal,SNR)
 
 for i in range(1):
@@ -35,6 +35,9 @@ for i in range(1):
 #DENOISER
 
 denoiser_model = Denoiser()
+
+#denoiser_model = torch.load("trained_model/trained_model.pht")
+#denoiser_model.eval()
 
 n_fft = 512
 

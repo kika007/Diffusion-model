@@ -7,8 +7,8 @@ class Denoiser(nn.Module):
         self.encoder = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(inplace=True),
+            #nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+            #nn.ReLU(inplace=True),
         )
 
         self.decoder = nn.Sequential(

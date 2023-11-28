@@ -38,7 +38,7 @@ for epoch in range(num_epochs):
 
         #vytváranie signal_noise
         #----------------------------------------------------
-        SNR = 50
+        SNR = 20
 
         noise = get_noise(waveform,SNR)
 
@@ -65,6 +65,8 @@ for epoch in range(num_epochs):
         losses.append(loss.item())
 
         print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(data_loader)}], Loss: {loss.item()}')
+
+torch.save(denoiser_model,"trained_model/trained_model.pht")
 
 # Vykreslenie priebehu strát počas trénovania
 plt.plot(losses)
