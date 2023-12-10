@@ -24,15 +24,15 @@ class Denoiser(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-    def forward(self, signal, snr_value):
+    def forward(self, signal, time_step):
         # 'signal' represents the input signal, and 'snr_value' is the SNR value
         
         # Forward pass through the encoder
         x = self.encoder(signal)
         
         # Process SNR value through the SNR processing layer
-        
-        snr_processed = self.snr_layer(snr_value)
+        time_step = torch.tensor([time_step],dtype=torch.float)
+        snr_processed = self.snr_layer(time_step)
 
         # Concatenate the encoded signal with the processed SNR value
         x = torch.cat((x, snr_processed.unsqueeze(-1).unsqueeze(-1).expand_as(x)))

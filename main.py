@@ -29,12 +29,6 @@ signal, sample_rate = torchaudio.load(file_path)
 
 noise = get_noise(signal,SNR)
 
-for i in range(1):
-    if(i ==0):
-        signal_noise = signal + noise
-
-    signal_noise = signal_noise + noise
-
 #-------------------------------------------------------
 
 #DEFINE TIMESTEP
@@ -59,11 +53,6 @@ denoiser_model = Denoiser()
 #denoiser_model = torch.load("trained_model/trained_model.pht")
 #denoiser_model.eval()
 
-spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal)
-
-noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal_noise)
-
-
 # Trénovanie autoencodéra pre úpravu spektrogramov
 criterion = nn.MSELoss()
 optimizer = optim.Adam(denoiser_model.parameters(), lr=0.0001)
@@ -75,11 +64,17 @@ num_epochs = 10
 
 for epoch in range(num_epochs):
 
+    time_step = torch.tensor([10])
 
-    noisy_x = q_sample(signal, t, noise)
+    noisy_x = q_sample(signal, time_step, noise)
     # Predikcia a výpočet chyby
-    SNR_tensor = torch.tensor([40], dtype=torch.float)
-    output_spectrogram = denoiser_model(noisy_spectrogram,SNR_tensor)
+
+    spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal)
+
+    noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(noisy_x)
+
+
+    output_spectrogram = denoiser_model(noisy_spectrogram,time_step)
     loss = criterion(output_spectrogram, spectrogram)
 
     # Spätná propagácia a aktualizácia váh
@@ -95,7 +90,7 @@ for epoch in range(num_epochs):
 
 # Predikcia denoised spektrogramu pomocou natrénovaného denoisera
 with torch.no_grad():
-    denoised_spectrogram = denoiser_model(noisy_spectrogram,SNR_tensor)
+    denoised_spectrogram = denoiser_model(noisy_spectrogram,time_step)
 
 
 # Vizualizácia pôvodného, zašumeného a denoised spektrogramu
