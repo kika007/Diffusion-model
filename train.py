@@ -9,7 +9,14 @@ from function.get_noise import get_noise
 from dataset import AudioDataset
 from Model_demo import Denoiser
 
+#SET PARAMETERS
 
+n_steps = 20
+SNR = 40
+n_fft = 512
+num_epochs = 2
+
+#-----------------------------------------------
 
 #IMPORT DATASET
 
@@ -19,42 +26,48 @@ data_loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
 #--------------------------------------------------
 
-#DENOISER
 
-num_epochs = 2
+#DEFINE TIMESTEP
+
+alphas = 1. - torch.linspace(0.001, 0.2, n_steps)
+alphas_cumprod = torch.cumprod(alphas, axis=0)
+
+sqrt_alphas_cumprod = torch.sqrt(alphas_cumprod)
+sqrt_one_minus_alphas_cumprod = torch.sqrt(1 - sqrt_alphas_cumprod ** 2)
+
+def q_sample(signal, t, noise=None):
+    if noise is None:
+        noise = get_noise(signal,SNR)
+    return sqrt_alphas_cumprod.gather(-1, t) * signal + sqrt_one_minus_alphas_cumprod.gather(-1, t) * noise
+
+#-------------------------------------------------
+
+#DENOISER
 
 denoiser_model = Denoiser()
 
-# Trénovanie autoencodéra pre úpravu spektrogramov
 criterion = nn.MSELoss()
 optimizer = optim.Adam(denoiser_model.parameters(), lr=0.001)
 
-# Uchováva stratu počas trénovania
 losses = []
 
 for epoch in range(num_epochs):
     for i, inputs in enumerate(data_loader):
         waveform,sample_rate = inputs
 
-        #vytváranie signal_noise
-        #----------------------------------------------------
-        SNR = 20
+        #Setting random time step
+        time_step = torch.randint(0, n_steps, (1,)).item()
+        time_step = torch.tensor([time_step])
 
         noise = get_noise(waveform,SNR)
-
-        for j in range(1):
-            if(j ==0):
-                signal_noise = waveform + noise
-
-        signal_noise = signal_noise + noise
-        #-------------------------------------------------------
+        noisy_x = q_sample(waveform, time_step, noise)
         
         spectrogram = torchaudio.transforms.Spectrogram(n_fft=512)(waveform)
 
-        noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=512)(signal_noise)
+        noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=512)(noisy_x)
 
         # Predikcia a výpočet chyby
-        output_spectrogram = denoiser_model(noisy_spectrogram)
+        output_spectrogram = denoiser_model(noisy_spectrogram,time_step)
         loss = criterion(output_spectrogram, spectrogram)
 
         # Spätná propagácia a aktualizácia váh

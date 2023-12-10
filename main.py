@@ -12,9 +12,10 @@ from torch.utils.data import Dataset, DataLoader
 
 #SET PARAMETERS
 
-n_steps = 200
+n_steps = 20
 SNR = 40
 n_fft = 512
+num_epochs = 100
 
 #-----------------------------------------------
 
@@ -53,31 +54,32 @@ denoiser_model = Denoiser()
 #denoiser_model = torch.load("trained_model/trained_model.pht")
 #denoiser_model.eval()
 
-# Trénovanie autoencodéra pre úpravu spektrogramov
+#loss and optimalization
 criterion = nn.MSELoss()
 optimizer = optim.Adam(denoiser_model.parameters(), lr=0.0001)
 
-# Uchováva stratu počas trénovania
+#losses storage
 losses = []
 
-num_epochs = 10
 
 for epoch in range(num_epochs):
 
-    time_step = torch.tensor([10])
+    #Setting random time step
+    time_step = torch.randint(0, n_steps, (1,)).item()
+    time_step = torch.tensor([time_step])
 
+    #getting noisy signal
     noisy_x = q_sample(signal, time_step, noise)
-    # Predikcia a výpočet chyby
+
 
     spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal)
-
     noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(noisy_x)
 
 
     output_spectrogram = denoiser_model(noisy_spectrogram,time_step)
     loss = criterion(output_spectrogram, spectrogram)
 
-    # Spätná propagácia a aktualizácia váh
+    # Backpropagation and optimalization
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
@@ -88,12 +90,16 @@ for epoch in range(num_epochs):
 
 
 
-# Predikcia denoised spektrogramu pomocou natrénovaného denoisera
+# Pprediction of denoiser
 with torch.no_grad():
     denoised_spectrogram = denoiser_model(noisy_spectrogram,time_step)
 
 
-# Vizualizácia pôvodného, zašumeného a denoised spektrogramu
+#-----------------------------------------------------------------------
+
+
+#SPECTROGRAMS
+
 plt.figure(figsize=(18, 12))
 
 plt.subplot(3, 1, 1)
@@ -112,7 +118,7 @@ plt.show()
 
 #------------------------------------------------------------------------
 
-#rekonštrukcia signálu s použitím funkcie torchaudio.transforms
+#RECONSTRACTION
 
 reconstructed_signal = torchaudio.transforms.GriffinLim(n_fft=n_fft)(denoised_spectrogram)
 signal_1 = signal.numpy()
@@ -127,7 +133,7 @@ plt.title('transformed signal')
 
 plt.show()
 
-
+#------------------------------------------------------------------------
 
 
 
