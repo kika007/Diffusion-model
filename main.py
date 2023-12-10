@@ -5,12 +5,18 @@ from function.play_signal import play_signal
 from function.get_noise import get_noise
 from dataset import AudioDataset
 import numpy as np
-from model_demo import Denoiser
+from Model_demo import Denoiser
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
+#SET PARAMETERS
 
+n_steps = 200
+SNR = 40
+n_fft = 512
+
+#-----------------------------------------------
 
 #IMPORT SIGNAL
 
@@ -21,7 +27,6 @@ signal, sample_rate = torchaudio.load(file_path)
 
 #ADD NOISE
 
-SNR = 20
 noise = get_noise(signal,SNR)
 
 for i in range(1):
@@ -32,14 +37,27 @@ for i in range(1):
 
 #-------------------------------------------------------
 
+#DEFINE TIMESTEP
+
+alphas = 1. - torch.linspace(0.001, 0.2, n_steps)
+alphas_cumprod = torch.cumprod(alphas, axis=0)
+
+sqrt_alphas_cumprod = torch.sqrt(alphas_cumprod)
+sqrt_one_minus_alphas_cumprod = torch.sqrt(1 - sqrt_alphas_cumprod ** 2)
+
+def q_sample(signal, t, noise=None):
+    if noise is None:
+        noise = get_noise(signal,SNR)
+    return sqrt_alphas_cumprod.gather(-1, t) * signal + sqrt_one_minus_alphas_cumprod.gather(-1, t) * noise
+
+#-------------------------------------------------
+
 #DENOISER
 
 denoiser_model = Denoiser()
 
 #denoiser_model = torch.load("trained_model/trained_model.pht")
 #denoiser_model.eval()
-
-n_fft = 512
 
 spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal)
 
@@ -48,7 +66,7 @@ noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=n_fft)(signal_noise)
 
 # Trénovanie autoencodéra pre úpravu spektrogramov
 criterion = nn.MSELoss()
-optimizer = optim.Adam(denoiser_model.parameters(), lr=0.001)
+optimizer = optim.Adam(denoiser_model.parameters(), lr=0.0001)
 
 # Uchováva stratu počas trénovania
 losses = []
@@ -56,8 +74,12 @@ losses = []
 num_epochs = 10
 
 for epoch in range(num_epochs):
+
+
+    noisy_x = q_sample(signal, t, noise)
     # Predikcia a výpočet chyby
-    output_spectrogram = denoiser_model(noisy_spectrogram)
+    SNR_tensor = torch.tensor([40], dtype=torch.float)
+    output_spectrogram = denoiser_model(noisy_spectrogram,SNR_tensor)
     loss = criterion(output_spectrogram, spectrogram)
 
     # Spätná propagácia a aktualizácia váh
@@ -73,7 +95,7 @@ for epoch in range(num_epochs):
 
 # Predikcia denoised spektrogramu pomocou natrénovaného denoisera
 with torch.no_grad():
-    denoised_spectrogram = denoiser_model(noisy_spectrogram)
+    denoised_spectrogram = denoiser_model(noisy_spectrogram,SNR_tensor)
 
 
 # Vizualizácia pôvodného, zašumeného a denoised spektrogramu
@@ -94,25 +116,6 @@ plt.title('Denoised Spectrogram')
 plt.show()
 
 #------------------------------------------------------------------------
-
-#rekonštruovanie signálu - in progress problém že do modelu hádžem realne čísla a výstup su tiež realne čísla, takže to neviem transformovať späť
-
-""""
-reconstructed_signal = torch.istft(denoised_spectrogram,n_fft)
-
-signal = signal.numpy()
-plt.subplot(2,1,1)
-plt.plot(signal[0])
-plt.title('Original signal')
-
-reconstructed_signal =reconstructed_signal.numpy()
-plt.subplot(2,1,2)
-plt.plot(reconstructed_signal[0])
-plt.title('Reconstructed signal')
-
-plt.show()
-"""
-
 
 #rekonštrukcia signálu s použitím funkcie torchaudio.transforms
 

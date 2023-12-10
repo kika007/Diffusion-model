@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from function.get_noise import get_noise
 from dataset import AudioDataset
-from model_demo import Denoiser
+from Model_demo import Denoiser
 
 
 
