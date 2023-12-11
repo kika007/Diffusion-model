@@ -55,7 +55,7 @@ for epoch in range(num_epochs):
     for i, inputs in enumerate(data_loader):
         waveform,sample_rate = inputs
 
-        #Setting random time step
+        
         time_step = torch.randint(0, n_steps, (1,)).item()
         time_step = torch.tensor([time_step])
 
@@ -66,11 +66,11 @@ for epoch in range(num_epochs):
 
         noisy_spectrogram = torchaudio.transforms.Spectrogram(n_fft=512)(noisy_x)
 
-        # Predikcia a výpočet chyby
+        
         output_spectrogram = denoiser_model(noisy_spectrogram,time_step)
         loss = criterion(output_spectrogram, spectrogram)
 
-        # Spätná propagácia a aktualizácia váh
+        
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -79,12 +79,20 @@ for epoch in range(num_epochs):
 
         print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(data_loader)}], Loss: {loss.item()}')
 
+#-----------------------------------------------------------------------------
+
+#SAVE MODEL
+
 torch.save(denoiser_model,"trained_model/trained_model.pht")
 
-# Vykreslenie priebehu strát počas trénovania
+#-----------------------------------------------------------------------------
+
+# PLOT LOSS 
 plt.plot(losses)
 plt.title('Training Loss Over Time')
 plt.xlabel('Steps')
 plt.ylabel('MSE Loss')
 plt.show()
+
+#-----------------------------------------------------------------------------
 

@@ -15,7 +15,8 @@ class Denoiser(nn.Module):
 
         self.decoder = nn.Sequential(
             nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),  
-            nn.Conv2d(128, 1, kernel_size=3, stride=1, padding=1),   
+            nn.Conv2d(128, 1, kernel_size=3, stride=1, padding=1),  
+            nn.ReLU(inplace=True),
         )
 
         # Time_step processing layer
@@ -33,7 +34,7 @@ class Denoiser(nn.Module):
         snr_processed = self.time_layer(time_step)
 
         # Concatenate the encoded signal with the processed time_step value
-        x = torch.cat((x, snr_processed.unsqueeze(-1).unsqueeze(-1).expand_as(x)))
+        x = torch.cat((x, snr_processed.unsqueeze(-1).unsqueeze(-1).expand_as(x)), dim=-3)
 
         # Forward pass through the decoder
         x = self.decoder(x)

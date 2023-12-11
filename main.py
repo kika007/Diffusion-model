@@ -15,7 +15,7 @@ from torch.utils.data import Dataset, DataLoader
 n_steps = 20
 SNR = 40
 n_fft = 512
-num_epochs = 100
+num_epochs = 1
 
 #-----------------------------------------------
 
@@ -51,6 +51,7 @@ def q_sample(signal, t, noise=None):
 
 denoiser_model = Denoiser()
 
+#load trained model
 #denoiser_model = torch.load("trained_model/trained_model.pht")
 #denoiser_model.eval()
 
@@ -134,6 +135,7 @@ plt.title('transformed signal')
 plt.show()
 
 #------------------------------------------------------------------------
+
 
 
 

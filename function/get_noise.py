@@ -15,7 +15,7 @@ def get_noise(signal,SNR):
     #Because sample length is large (typically > 40000)
     #we can use the population formula for standard daviation.
     
-    noise = torch.normal(0, STD_n, (signal.shape[1],))
+    noise = torch.normal(0, STD_n, signal.shape)
     return noise
 
     
