@@ -88,6 +88,7 @@ torch.save(denoiser_model,"trained_model/trained_model.pht")
 #-----------------------------------------------------------------------------
 
 # PLOT LOSS 
+
 plt.plot(losses)
 plt.title('Training Loss Over Time')
 plt.xlabel('Steps')
